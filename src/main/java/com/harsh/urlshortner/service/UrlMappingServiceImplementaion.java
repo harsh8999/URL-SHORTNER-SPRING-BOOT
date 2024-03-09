@@ -26,12 +26,9 @@ public class UrlMappingServiceImplementaion implements UrlMappingService {
             return existingMapping.get();
         }
         
-        UrlMapping newUrl = new UrlMapping();
-        newUrl.setOriginalUrl(originalUrl);
-        // create short URL
-        String shortUrl = urlShortnerService.generateShortUrl(originalUrl);
-        newUrl.setShortUrl(shortUrl);
-        return urlMappingRepository.save(newUrl);
+        
+        urlShortnerService.generateShortUrl(originalUrl);
+        return urlMappingRepository.findByOriginalUrl(originalUrl).orElseThrow(() -> new RuntimeException("Url Not found!!!"));
     }
 
     @Override

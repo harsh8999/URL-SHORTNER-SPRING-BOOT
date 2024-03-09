@@ -7,11 +7,20 @@ import java.util.Base64;
 
 import org.springframework.stereotype.Service;
 
+import com.harsh.urlshortner.entity.UrlMapping;
+import com.harsh.urlshortner.repository.UrlMappingRepository;
+
 @Service
 public class UrlShortnerServiceImplementation implements UrlShortnerService {
 
     private static final String BASE_URL = "http://shorturl.com/";
     private static final String ALGORITHM = "SHA-256";
+
+    private UrlMappingRepository urlMappingRepository;
+
+    public UrlShortnerServiceImplementation(UrlMappingRepository urlMappingRepository) {
+        this.urlMappingRepository = urlMappingRepository;
+    }
 
     @Override
     public String generateShortUrl(String originalUrl) {
@@ -23,6 +32,19 @@ public class UrlShortnerServiceImplementation implements UrlShortnerService {
             String hashString = Base64.getUrlEncoder().withoutPadding().encodeToString(hashBytes);
             // Take the first 8 characters of the base64-encoded string
             String shortHash = hashString.substring(0, 8);
+
+            // check for collision
+            if(urlMappingRepository.findByShortUrl(shortHash).isEmpty()) {
+                shortHash = hashString.substring(8, 16);
+            }
+
+            // save the new hash
+            UrlMapping newUrl = new UrlMapping();
+            newUrl.setOriginalUrl(originalUrl);
+            newUrl.setShortUrl(shortHash);
+            urlMappingRepository.save(newUrl);
+
+
             // Combine with base URL
             return BASE_URL + shortHash;
             
